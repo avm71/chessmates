@@ -1,4 +1,4 @@
-pragma solidity >=0.7.3;
+pragma solidity >=0.7.3 < 0.9.0;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -6,6 +6,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract Chessmates is ERC721 {
     using Counters for Counters.Counter;
     Counters.Counter private tokenID;
+    string uriPrefix = "";
+    
 
     constructor() ERC721("ChessMates", "CHESS"){}
 
