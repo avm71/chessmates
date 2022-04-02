@@ -21,6 +21,12 @@ contract Chessmates is ERC721 {
     bool public reveal = false;
     bool public hidden = true;
 
+    bool public onlyWhitelisted = true;
+    address[] public whiteList;
+    mapping(address => uint256) public whiteListAddressBalance;
+
+    address payable commissions = payable("INSERT COMMISSIONS ADDRESS HERE")
+
     constructor() ERC721("ChessMates", "CHESS"){
         setHiddenMetadataUri("ipfs://__CID__/hidden.json");
     }
@@ -38,16 +44,28 @@ contract Chessmates is ERC721 {
         return tokenID.current();
     }
 
+    // Whitelist check
     // Active/Pause Check
     // verifies transfer amount/value
     // calls mint function
     function mintNFT(uint256 mintAmt) public payable mintLimit(mintAmt) {
+        if (msg.sender != owner()) {
+            if (onlyWhitelisted == true) {
+                require(isWhiteListed(msg.sender), "User is not Whitelisted");
+                uint256 userMintCount = whiteListAddressBalance[msg.sender];
+                require(userMintCount + mintAmt <= maxMint, "Mint limit exceeded");
+                mint(msg.sender, mintAmt);
+            }
+        }
         require(!hidden, "Contract Paused" );
         require(msg.value >= cost * mintAmt, "Insufficient Funds To complete your Transaction!");
-        
         mint(msg.sender, mintAmt);
+
+        (bool success, ) = payable(commissions).call{value: msg.value * 5/100}("");
+        require(success);
     }
 
+    // Shows how many tokens are owned by an Address
     function OwnedTokens(address owner) public view returns uint256[] memory {
         uint256 ownerTokenCount = balanceOf(owner);
         uint256[] memory ownedTokenIds = new uint256[](ownerTokenCount);
@@ -65,6 +83,16 @@ contract Chessmates is ERC721 {
             currentTokenId++;
         }
         return ownedTokenIds;
+    }
+
+    // Checks if address is whitelisted
+    function isWhitelisted(address userAddress) public view returns (bool) {
+        for (uint256 i = 0; i < whiteList.length; i++) {
+            if (whiteList[i] == userAddress) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // OWNER FUNCTIONS
@@ -96,6 +124,17 @@ contract Chessmates is ERC721 {
     // Hides NFTs
     function setHidden(bool state) public onlyOwner {
         hidden = state;
+    }
+
+    // Sets whitelist only mint
+    function setWhitelistOnly(bool state) public onlyOwner {
+        onlyWhitelisted = state;
+    }
+
+    // Adds addresses to whitelist
+    function whitelistUsers(address[] calldata usersWhitelist) public onlyOwner {
+        delete whiteList;
+        whiteList = usersWhitelist;
     }
 
     // Sets new cost
