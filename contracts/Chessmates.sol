@@ -169,7 +169,6 @@ contract Chessmates is ERC721 {
 
     // INTERNAL FUNCTIONS
 
-    // Mints NFT
     function mint(address reciever, uint256 mintAmt) internal {
         for (uint256 i = 0; i < mintAmt; i++) {
             tokenID.increment();
